@@ -487,23 +487,28 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, get, child, onDisconnect, push, serverTimestamp, remove }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // ── Firebase config (öffentliche Demo-DB — für Produktion eigene anlegen) ──
-  // ANLEITUNG: Gehe zu https://console.firebase.google.com/
-  // Erstelle ein Projekt → Realtime Database → Daten (Testmodus)
-  // Ersetze die Config unten mit deiner eigenen.
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
-    apiKey: "AIzaSyDemoKeyReplaceWithYours",
-    authDomain: "livepad-demo.firebaseapp.com",
-    databaseURL: "https://livepad-demo-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "livepad-demo",
-    storageBucket: "livepad-demo.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:0000000000000000"
+    apiKey: "AIzaSyBy1AVs5BSwMtZtqo380vCUvy33Rq-XeeE",
+    authDomain: "livepad-1e874.firebaseapp.com",
+    projectId: "livepad-1e874",
+    storageBucket: "livepad-1e874.firebasestorage.app",
+    messagingSenderId: "915098579977",
+    appId: "1:915098579977:web:999328cc753610cd36b4d8",
+    measurementId: "G-J0PXWV9ZZJ"
   };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
 
   // ═══════════════════════════════════════════════════════
   // HINWEIS: Da dies eine Demo ohne echte Firebase-Config ist,
