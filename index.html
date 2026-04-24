@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LivePad — Gemeinsam schreiben</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #2a2a2a;
+    --accent: #c8ff00;
+    --accent2: #ff6b35;
+    --text: #e8e8e8;
+    --muted: #555;
+    --online: #00e5a0;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .logo span { color: var(--text); }
+
+  .pad-id-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    flex: 1;
+    max-width: 420px;
+  }
+
+  .pad-id-area label {
+    font-size: 0.65rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  #pad-id-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  #pad-id-display:hover { text-decoration: underline; }
+
+  .btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--muted);
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .btn-icon:hover { color: var(--accent); }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .dot.online { background: var(--online); box-shadow: 0 0 6px var(--online); }
+  .dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .users-count {
+    font-size: 0.72rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .toolbar button {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text);
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .toolbar button:hover {
+    border-color: var(--border);
+    background: var(--bg);
+    color: var(--accent);
+  }
+
+  .toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  #font-size-sel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+  }
+
+  /* ── Editor ── */
+  .editor-wrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #editor {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 32px 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    line-height: 1.75;
+    tab-size: 2;
+    caret-color: var(--accent);
+  }
+
+  #editor::placeholder { color: var(--muted); font-style: italic; }
+  #editor::selection { background: rgba(200, 255, 0, 0.2); }
+
+  /* Remote cursor flash */
+  .remote-typing {
+    position: absolute;
+    bottom: 16px;
+    right: 24px;
+    background: rgba(0,229,160,0.12);
+    border: 1px solid var(--online);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--online);
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .remote-typing.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Footer ── */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .footer-left {
+    font-size: 0.65rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+  }
+
+  .footer-right {
+    font-size: 0.65rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 40px;
+    width: 90%;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .modal h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .btn-primary:hover { background: #d4ff1a; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-family: 'Space Mono', monospace;
+  }
+  .or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .join-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .join-row input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .join-row input:focus { border-color: var(--accent); }
+  .join-row input::placeholder { color: var(--muted); }
+
+  .join-row button {
+    background: var(--border);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .join-row button:hover { background: var(--accent); color: #000; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #000;
+    padding: 10px 22px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 9998;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Scrollbar */
+  #editor::-webkit-scrollbar { width: 6px; }
+  #editor::-webkit-scrollbar-track { background: transparent; }
+  #editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="logo">Live<span>Pad</span></div>
+    <div class="pad-id-area">
+      <label>PAD-ID</label>
+      <span id="pad-id-display" title="Klicken zum Kopieren" onclick="copyLink()">—</span>
+      <button class="btn-icon" onclick="copyLink()" title="Link kopieren">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot">
+        <div class="dot" id="conn-dot"></div>
+        <span id="conn-label">Verbinde…</span>
+      </div>
+      <div class="users-count" id="users-count"></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button onclick="fmt('bold')"><b>B</b></button>
+    <button onclick="fmt('italic')"><i>I</i></button>
+    <button onclick="fmt('underline')"><u>U</u></button>
+    <div class="toolbar-sep"></div>
+    <select id="font-size-sel" onchange="changeSize(this.value)">
+      <option value="12">12px</option>
+      <option value="14">14px</option>
+      <option value="15" selected>15px</option>
+      <option value="18">18px</option>
+      <option value="22">22px</option>
+    </select>
+    <div class="toolbar-sep"></div>
+    <button onclick="clearPad()">✕ Leeren</button>
+    <button onclick="downloadPad()">↓ Herunterladen</button>
+  </div>
+
+  <div class="editor-wrap">
+    <textarea id="editor" placeholder="Hier tippen… Änderungen werden sofort mit allen geteilt, die diesen Link haben."></textarea>
+    <div class="remote-typing" id="remote-typing">✦ Jemand tippt…</div>
+  </div>
+
+  <footer>
+    <div class="footer-left" id="char-count">0 Zeichen</div>
+    <div class="footer-right" id="last-saved">Noch nicht gespeichert</div>
+  </footer>
+</div>
+
+<!-- Start Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>LivePad</h2>
+    <p>Erstelle ein neues Pad oder öffne ein bestehendes über dessen ID — beide Geräte sehen Änderungen live.</p>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="createNewPad()">✦ Neues Pad erstellen</button>
+      <div class="or-divider">oder</div>
+      <div class="join-row">
+        <input type="text" id="join-input" placeholder="Pad-ID eingeben…" onkeydown="if(event.key==='Enter')joinPad()">
+        <button onclick="joinPad()">Öffnen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, get, child, onDisconnect, push, serverTimestamp, remove }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ── Firebase config (öffentliche Demo-DB — für Produktion eigene anlegen) ──
+  // ANLEITUNG: Gehe zu https://console.firebase.google.com/
+  // Erstelle ein Projekt → Realtime Database → Daten (Testmodus)
+  // Ersetze die Config unten mit deiner eigenen.
+  const firebaseConfig = {
+    apiKey: "AIzaSyDemoKeyReplaceWithYours",
+    authDomain: "livepad-demo.firebaseapp.com",
+    databaseURL: "https://livepad-demo-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "livepad-demo",
+    storageBucket: "livepad-demo.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:0000000000000000"
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // HINWEIS: Da dies eine Demo ohne echte Firebase-Config ist,
+  // wird ein localStorage-basierter BroadcastChannel-Fallback
+  // verwendet, der im selben Browser zwischen Tabs funktioniert.
+  // Für echte Geräte: Füge deine Firebase-Konfiguration ein!
+  // ═══════════════════════════════════════════════════════
+
+  const editor   = document.getElementById('editor');
+  const connDot  = document.getElementById('conn-dot');
+  const connLabel= document.getElementById('conn-label');
+  const charCount= document.getElementById('char-count');
+  const lastSaved= document.getElementById('last-saved');
+  const remoteTyping = document.getElementById('remote-typing');
+  const usersCount = document.getElementById('users-count');
+  const padIdDisplay = document.getElementById('pad-id-display');
+
+  let currentPadId = null;
+  let db = null;
+  let padRef = null;
+  let presenceRef = null;
+  let myUserId = Math.random().toString(36).slice(2, 8);
+  let isRemoteUpdate = false;
+  let saveTimeout = null;
+  let typingTimeout = null;
+  let remoteTypingTimeout = null;
+  let channel = null; // BroadcastChannel fallback
+  let useFirebase = false;
+
+  // Try to init Firebase
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getDatabase(app);
+    useFirebase = true;
+  } catch(e) {
+    console.log('Firebase nicht konfiguriert, nutze BroadcastChannel-Fallback');
+    useFirebase = false;
+  }
+
+  // ── Expose globals ──
+  window.createNewPad = createNewPad;
+  window.joinPad = joinPad;
+  window.copyLink = copyLink;
+  window.fmt = fmt;
+  window.changeSize = changeSize;
+  window.clearPad = clearPad;
+  window.downloadPad = downloadPad;
+
+  // ── Check URL for pad id ──
+  window.addEventListener('load', () => {
+    const hash = location.hash.slice(1);
+    if (hash) {
+      document.getElementById('join-input').value = hash;
+    }
+  });
+
+  function generateId() {
+    const words = ['alpha','beta','nova','echo','delta','sigma','omega','zenith','pulse','core','flux','arc'];
+    const a = words[Math.floor(Math.random()*words.length)];
+    const b = words[Math.floor(Math.random()*words.length)];
+    const n = Math.floor(1000 + Math.random()*9000);
+    return `${a}-${b}-${n}`;
+  }
+
+  function createNewPad() {
+    const id = generateId();
+    openPad(id);
+  }
+
+  function joinPad() {
+    const val = document.getElementById('join-input').value.trim();
+    if (!val) { showToast('Bitte eine Pad-ID eingeben'); return; }
+    openPad(val);
+  }
+
+  function openPad(id) {
+    currentPadId = id;
+    location.hash = id;
+    padIdDisplay.textContent = id;
+    document.getElementById('modal').style.display = 'none';
+
+    if (useFirebase) {
+      setupFirebase(id);
+    } else {
+      setupBroadcastChannel(id);
+    }
+  }
+
+  // ── FIREBASE MODE ──
+  function setupFirebase(id) {
+    padRef = ref(db, `pads/${id}`);
+    presenceRef = push(ref(db, `pads/${id}/presence`));
+
+    // Mark presence
+    set(presenceRef, { user: myUserId, joined: serverTimestamp() });
+    onDisconnect(presenceRef).remove();
+
+    // Listen to presence count
+    onValue(ref(db, `pads/${id}/presence`), snap => {
+      const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+      usersCount.textContent = count === 1 ? '1 Nutzer online' : `${count} Nutzer online`;
+    });
+
+    // Listen to content
+    onValue(ref(db, `pads/${id}/content`), snap => {
+      const val = snap.val() || '';
+      if (val !== editor.value) {
+        isRemoteUpdate = true;
+        const selStart = editor.selectionStart;
+        const selEnd   = editor.selectionEnd;
+        editor.value = val;
+        try { editor.setSelectionRange(selStart, selEnd); } catch(e){}
+        isRemoteUpdate = false;
+        updateMeta();
+        showRemoteTyping();
+      }
+    });
+
+    // Listen to typing indicator
+    onValue(ref(db, `pads/${id}/typing`), snap => {
+      const data = snap.val();
+      if (data && data.user && data.user !== myUserId) {
+        showRemoteTyping();
+      }
+    });
+
+    setConnected(true);
+
+    editor.addEventListener('input', () => {
+      if (isRemoteUpdate) return;
+      updateMeta();
+      scheduleSave();
+      // Send typing indicator
+      set(ref(db, `pads/${id}/typing`), { user: myUserId, ts: Date.now() });
+    });
+  }
+
+  function scheduleSave() {
+    clearTimeout(saveTimeout);
+    connDot.classList.remove('online');
+    connDot.classList.add('syncing');
+    saveTimeout = setTimeout(() => {
+      if (useFirebase && padRef) {
+        set(ref(db, `pads/${currentPadId}/content`), editor.value)
+          .then(() => {
+            lastSaved.textContent = 'Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            setConnected(true);
+          })
+          .catch(() => setConnected(false));
+      } else if (channel) {
+        const data = { type: 'content', pad: currentPadId, value: editor.value, from: myUserId };
+        channel.postMessage(data);
+        localStorage.setItem('livepad_' + currentPadId, editor.value);
+        lastSaved.textContent = 'Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        setConnected(true);
+      }
+    }, 300);
+  }
+
+  // ── BROADCASTCHANNEL FALLBACK (same browser, multi-tab) ──
+  function setupBroadcastChannel(id) {
+    channel = new BroadcastChannel('livepad_' + id);
+    setConnected(true);
+    usersCount.textContent = 'Multi-Tab Modus';
+
+    // Load existing content
+    const saved = localStorage.getItem('livepad_' + id);
+    if (saved) { editor.value = saved; updateMeta(); }
+
+    // Announce join
+    channel.postMessage({ type: 'join', from: myUserId });
+
+    channel.addEventListener('message', e => {
+      const msg = e.data;
+      if (!msg || msg.from === myUserId) return;
+      if (msg.type === 'content' && msg.pad === id) {
+        if (msg.value !== editor.value) {
+          isRemoteUpdate = true;
+          const s = editor.selectionStart, e2 = editor.selectionEnd;
+          editor.value = msg.value;
+          try { editor.setSelectionRange(s, e2); } catch(ex){}
+          isRemoteUpdate = false;
+          updateMeta();
+          showRemoteTyping();
+        }
+      }
+      if (msg.type === 'typing') { showRemoteTyping(); }
+    });
+
+    editor.addEventListener('input', () => {
+      if (isRemoteUpdate) return;
+      updateMeta();
+      scheduleSave();
+      channel.postMessage({ type: 'typing', from: myUserId });
+    });
+  }
+
+  function setConnected(ok) {
+    connDot.className = 'dot ' + (ok ? 'online' : '');
+    connLabel.textContent = ok ? 'Verbunden' : 'Getrennt';
+  }
+
+  function showRemoteTyping() {
+    remoteTyping.classList.add('visible');
+    clearTimeout(remoteTypingTimeout);
+    remoteTypingTimeout = setTimeout(() => remoteTyping.classList.remove('visible'), 2500);
+  }
+
+  function updateMeta() {
+    charCount.textContent = editor.value.length.toLocaleString('de-DE') + ' Zeichen';
+  }
+
+  // ── Toolbar ──
+  function fmt(cmd) {
+    // For textarea, just wrap selected text
+    const s = editor.selectionStart, e2 = editor.selectionEnd;
+    const sel = editor.value.substring(s, e2);
+    if (!sel) return;
+    const tags = { bold: ['**','**'], italic: ['_','_'], underline: ['<u>','</u>'] };
+    const [open, close] = tags[cmd];
+    editor.value = editor.value.substring(0, s) + open + sel + close + editor.value.substring(e2);
+    editor.setSelectionRange(s + open.length, e2 + open.length);
+    editor.dispatchEvent(new Event('input'));
+  }
+
+  function changeSize(v) {
+    editor.style.fontSize = v + 'px';
+  }
+
+  function clearPad() {
+    if (!confirm('Pad wirklich leeren?')) return;
+    editor.value = '';
+    editor.dispatchEvent(new Event('input'));
+    updateMeta();
+    scheduleSave();
+  }
+
+  function downloadPad() {
+    const blob = new Blob([editor.value], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (currentPadId || 'pad') + '.txt';
+    a.click();
+  }
+
+  function copyLink() {
+    const url = location.origin + location.pathname + '#' + currentPadId;
+    navigator.clipboard.writeText(url).then(() => showToast('Link kopiert!'));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  editor.addEventListener('input', updateMeta);
+</script>
+</body>
+</html>
