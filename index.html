@@ -2,749 +2,653 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LivePad — Gemeinsam schreiben</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LivePad</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#09090b;--bg2:#111113;--surface:#18181b;--surface2:#1f1f23;
+  --border:#27272a;--border2:#3f3f46;--text:#fafafa;--text2:#a1a1aa;--text3:#52525b;
+  --accent:#6366f1;--accent-h:#818cf8;--green:#22c55e;--red:#ef4444;--radius:10px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+#app{display:flex;flex-direction:column;height:100vh;}
+#main{display:flex;flex:1;overflow:hidden;}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* HEADER */
+header{display:flex;align-items:center;gap:8px;padding:0 14px;height:50px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo{font-size:1.05rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
+.logo b{color:var(--accent);}
+.pad-chip{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;transition:border-color .15s;flex:1;max-width:300px;}
+.pad-chip:hover{border-color:var(--border2);}
+.pad-chip-lbl{font-size:0.6rem;color:var(--text3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+.pad-chip-id{font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--accent-h);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.hdr-right{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;}
+.icon-btn{background:none;border:none;cursor:pointer;padding:5px;color:var(--text3);border-radius:6px;display:flex;align-items:center;transition:all .15s;}
+.icon-btn:hover{background:var(--surface2);color:var(--text);}
+.conn-badge{display:flex;align-items:center;gap:5px;font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:3px 8px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .3s;flex-shrink:0;}
+.dot.on{background:var(--green);box-shadow:0 0 5px var(--green);}
+.dot.sync{background:var(--accent);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.me-btn{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;transition:all .15s;font-size:0.75rem;font-family:'Inter',sans-serif;color:var(--text2);}
+.me-btn:hover{border-color:var(--border2);color:var(--text);}
+.me-av{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:#fff;flex-shrink:0;}
 
-  :root {
-    --bg: #0d0d0d;
-    --surface: #141414;
-    --border: #2a2a2a;
-    --accent: #c8ff00;
-    --accent2: #ff6b35;
-    --text: #e8e8e8;
-    --muted: #555;
-    --online: #00e5a0;
-  }
+/* SIDEBAR */
+#sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .22s ease;}
+#sidebar.hidden{width:0;}
+.sb-section{padding:10px 12px 6px;}
+.sb-title{font-size:0.6rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;}
+.user-list{display:flex;flex-direction:column;gap:3px;}
+.user-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;background:var(--surface2);}
+.u-av{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0;}
+.u-name{font-size:0.8rem;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.u-you{font-size:0.58rem;color:var(--text3);background:var(--border);padding:1px 5px;border-radius:3px;}
+.sb-divider{height:1px;background:var(--border);margin:4px 12px;}
+.hist-mini{display:flex;flex-direction:column;gap:2px;max-height:200px;overflow-y:auto;padding-right:2px;}
+.hist-mini::-webkit-scrollbar{width:2px;}
+.hist-mini::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.hm-item{display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border-radius:6px;cursor:pointer;transition:background .1s;border-left:2px solid transparent;}
+.hm-item:hover{background:var(--surface2);}
+.hm-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.hm-info{flex:1;min-width:0;}
+.hm-name{font-size:0.7rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hm-time{font-size:0.62rem;color:var(--text3);}
+.hm-prev{font-size:0.65rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;}
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    overflow: hidden;
-  }
+/* EDITOR */
+#editor-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.toolbar{display:flex;align-items:center;gap:2px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;}
+.tb-btn{background:none;border:1px solid transparent;border-radius:5px;color:var(--text2);cursor:pointer;padding:4px 8px;font-size:0.73rem;font-family:'Inter',sans-serif;transition:all .12s;white-space:nowrap;}
+.tb-btn:hover{background:var(--surface2);border-color:var(--border);color:var(--text);}
+.tb-sep{width:1px;height:16px;background:var(--border);margin:0 2px;}
+.tb-sel{background:var(--bg2);border:1px solid var(--border);border-radius:5px;color:var(--text2);padding:3px 6px;font-size:0.73rem;font-family:'Inter',sans-serif;cursor:pointer;outline:none;}
+.editor-wrap{flex:1;position:relative;overflow:hidden;}
+#editor-display{position:absolute;inset:0;padding:24px 32px;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;overflow-y:auto;pointer-events:none;tab-size:2;}
+#editor-display::-webkit-scrollbar{width:5px;}
+#editor-display::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+#editor{position:absolute;inset:0;padding:24px 32px;background:transparent;color:transparent;border:none;outline:none;resize:none;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.8;tab-size:2;caret-color:var(--text);overflow-y:auto;-webkit-text-fill-color:transparent;}
+#editor::-webkit-scrollbar{width:5px;}
+#editor::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+#editor::selection{background:rgba(99,102,241,.25);}
+.seg{border-radius:2px;}
+.typing-pills{position:absolute;bottom:10px;right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;pointer-events:none;}
+.t-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.68rem;font-family:'JetBrains Mono',monospace;animation:slideUp .18s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.tdots{display:flex;gap:2px;margin-left:2px;}
+.tdots span{width:3px;height:3px;border-radius:50%;background:currentColor;animation:td 1.1s infinite;}
+.tdots span:nth-child(2){animation-delay:.2s;}
+.tdots span:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,80%,100%{opacity:.2}40%{opacity:1}}
+footer{display:flex;align-items:center;justify-content:space-between;padding:3px 14px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.ft{font-size:0.63rem;font-family:'JetBrains Mono',monospace;color:var(--text3);}
 
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.4;
-  }
+/* HISTORY PANEL */
+#hist-panel{position:fixed;top:50px;right:0;bottom:0;width:290px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;z-index:300;}
+#hist-panel.open{transform:translateX(0);}
+.hp-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
+.hp-title{font-size:0.82rem;font-weight:600;}
+.hp-list{flex:1;overflow-y:auto;padding:6px;}
+.hp-list::-webkit-scrollbar{width:3px;}
+.hp-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.hp-item{padding:9px 10px;border-radius:7px;margin-bottom:3px;cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
+.hp-item:hover{background:var(--surface2);}
+.hp-item-hdr{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
+.hp-item-name{font-size:0.75rem;font-weight:600;}
+.hp-item-time{font-size:0.62rem;color:var(--text3);margin-left:auto;}
+.hp-item-prev{font-size:0.65rem;color:var(--text2);font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-  #app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(8px);padding:16px;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:420px;}
+.modal h2{font-size:1.4rem;font-weight:700;margin-bottom:5px;letter-spacing:-.02em;}
+.modal p{font-size:0.82rem;color:var(--text2);margin-bottom:20px;line-height:1.6;}
+.mrow{display:flex;flex-direction:column;gap:10px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:0.72rem;font-weight:500;color:var(--text2);}
+.field input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;outline:none;transition:border-color .15s;}
+.field input:focus{border-color:var(--accent);}
+.colors{display:flex;gap:5px;flex-wrap:wrap;}
+.cswatch{width:26px;height:26px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.cswatch.active{border-color:#fff;transform:scale(1.18);}
+.btn-p{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:0.85rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;}
+.btn-p:hover{background:var(--accent-h);}
+.btn-s{background:none;color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:10px 18px;font-size:0.85rem;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;}
+.btn-s:hover{border-color:var(--border2);color:var(--text);}
+.or-row{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:0.72rem;}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:var(--border);}
+.join-row{display:flex;gap:7px;}
+.join-row input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.78rem;outline:none;transition:border-color .15s;}
+.join-row input:focus{border-color:var(--accent);}
+.join-row button{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;color:var(--text);font-family:'Inter',sans-serif;font-weight:500;cursor:pointer;transition:all .15s;font-size:0.82rem;}
+.join-row button:hover{border-color:var(--accent);color:var(--accent);}
+.hist-prev-box{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:11px;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text2);max-height:180px;overflow-y:auto;white-space:pre-wrap;line-height:1.65;margin-top:10px;}
+.restore-btn{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 13px;color:var(--text);font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;}
+.restore-btn:hover{border-color:var(--accent);color:var(--accent);}
 
-  /* ── Header ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-    gap: 12px;
-  }
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:var(--bg);padding:7px 16px;border-radius:20px;font-size:0.75rem;font-weight:600;font-family:'Inter',sans-serif;opacity:0;transition:all .22s;pointer-events:none;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-  .logo {
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-
-  .logo span { color: var(--text); }
-
-  .pad-id-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 12px;
-    flex: 1;
-    max-width: 420px;
-  }
-
-  .pad-id-area label {
-    font-size: 0.65rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  #pad-id-display {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-
-  #pad-id-display:hover { text-decoration: underline; }
-
-  .btn-icon {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    color: var(--muted);
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-  }
-  .btn-icon:hover { color: var(--accent); }
-
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-  }
-
-  .status-dot {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.3s;
-  }
-  .dot.online { background: var(--online); box-shadow: 0 0 6px var(--online); }
-  .dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .users-count {
-    font-size: 0.72rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  /* ── Toolbar ── */
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-    flex-wrap: wrap;
-  }
-
-  .toolbar button {
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    color: var(--text);
-    cursor: pointer;
-    padding: 4px 10px;
-    font-size: 0.78rem;
-    font-family: 'Space Mono', monospace;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .toolbar button:hover {
-    border-color: var(--border);
-    background: var(--bg);
-    color: var(--accent);
-  }
-
-  .toolbar-sep {
-    width: 1px;
-    height: 20px;
-    background: var(--border);
-    margin: 0 4px;
-  }
-
-  #font-size-sel {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    padding: 4px 8px;
-    font-size: 0.78rem;
-    font-family: 'Space Mono', monospace;
-    cursor: pointer;
-  }
-
-  /* ── Editor ── */
-  .editor-wrap {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  #editor {
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    border: none;
-    outline: none;
-    resize: none;
-    padding: 32px 40px;
-    font-family: 'Space Mono', monospace;
-    font-size: 15px;
-    line-height: 1.75;
-    tab-size: 2;
-    caret-color: var(--accent);
-  }
-
-  #editor::placeholder { color: var(--muted); font-style: italic; }
-  #editor::selection { background: rgba(200, 255, 0, 0.2); }
-
-  /* Remote cursor flash */
-  .remote-typing {
-    position: absolute;
-    bottom: 16px;
-    right: 24px;
-    background: rgba(0,229,160,0.12);
-    border: 1px solid var(--online);
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.72rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--online);
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-  .remote-typing.visible { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── Footer ── */
-  footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 20px;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-
-  .footer-left {
-    font-size: 0.65rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-  }
-
-  .footer-right {
-    font-size: 0.65rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-  }
-
-  /* ── Modal ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
-  }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 36px 40px;
-    width: 90%;
-    max-width: 480px;
-    text-align: center;
-  }
-
-  .modal h2 {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .modal p {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
-
-  .modal-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 14px 24px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.02em;
-  }
-  .btn-primary:hover { background: #d4ff1a; transform: translateY(-1px); }
-
-  .btn-secondary {
-    background: none;
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 24px;
-    font-size: 0.9rem;
-    font-family: 'Syne', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-  .or-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--muted);
-    font-size: 0.75rem;
-    font-family: 'Space Mono', monospace;
-  }
-  .or-divider::before, .or-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .join-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .join-row input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .join-row input:focus { border-color: var(--accent); }
-  .join-row input::placeholder { color: var(--muted); }
-
-  .join-row button {
-    background: var(--border);
-    border: none;
-    border-radius: 8px;
-    padding: 12px 18px;
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .join-row button:hover { background: var(--accent); color: #000; }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 48px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: #000;
-    padding: 10px 22px;
-    border-radius: 20px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 700;
-    opacity: 0;
-    transition: all 0.3s;
-    pointer-events: none;
-    z-index: 9998;
-  }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* Scrollbar */
-  #editor::-webkit-scrollbar { width: 6px; }
-  #editor::-webkit-scrollbar-track { background: transparent; }
-  #editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+@media(max-width:600px){
+  header{padding:0 8px;height:46px;}
+  .logo{font-size:.95rem;}
+  .pad-chip{max-width:130px;}
+  .pad-chip-lbl{display:none;}
+  .conn-badge span{display:none;}
+  #sidebar{position:fixed;top:46px;left:0;bottom:0;z-index:200;width:100vw !important;border-right:none;}
+  #sidebar.hidden{width:0 !important;overflow:hidden;}
+  #hist-panel{top:46px;width:100vw;}
+  .toolbar{padding:4px 6px;}
+  .tb-btn{padding:4px 6px;font-size:0.7rem;}
+  #editor,#editor-display{padding:14px;}
+  .typing-pills{bottom:6px;right:8px;}
+}
 </style>
 </head>
 <body>
-
 <div id="app">
-  <header>
-    <div class="logo">Live<span>Pad</span></div>
-    <div class="pad-id-area">
-      <label>PAD-ID</label>
-      <span id="pad-id-display" title="Klicken zum Kopieren" onclick="copyLink()">—</span>
-      <button class="btn-icon" onclick="copyLink()" title="Link kopieren">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+
+<header>
+  <div class="logo">Live<b>Pad</b></div>
+  <div class="pad-chip" onclick="copyLink()" title="Link kopieren">
+    <span class="pad-chip-lbl">Pad</span>
+    <span class="pad-chip-id" id="pad-id-display">—</span>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+  </div>
+  <div class="hdr-right">
+    <div class="conn-badge"><div class="dot" id="conn-dot"></div><span id="conn-label">Verbinde…</span></div>
+    <button class="me-btn" onclick="showProfileModal()">
+      <div class="me-av" id="me-av"></div>
+      <span id="me-name" style="max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    </button>
+    <button class="icon-btn" onclick="toggleHistory()" title="Verlauf">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </button>
+  </div>
+</header>
+
+<div id="main">
+  <div id="sidebar">
+    <div class="sb-section">
+      <div class="sb-title">Online</div>
+      <div class="user-list" id="user-list"></div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="sb-title">Letzte Änderungen</div>
+      <div class="hist-mini" id="sidebar-history"></div>
+    </div>
+  </div>
+
+  <div id="editor-col">
+    <div class="toolbar">
+      <button class="icon-btn" onclick="toggleSidebar()" title="Seitenleiste" style="padding:4px;margin-right:2px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       </button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" onclick="fmt('bold')"><b>B</b></button>
+      <button class="tb-btn" onclick="fmt('italic')"><i>I</i></button>
+      <button class="tb-btn" onclick="fmt('underline')"><u>U</u></button>
+      <div class="tb-sep"></div>
+      <select class="tb-sel" id="font-size-sel" onchange="changeSize(this.value)">
+        <option value="12">12px</option><option value="13">13px</option>
+        <option value="14" selected>14px</option><option value="16">16px</option>
+        <option value="18">18px</option><option value="20">20px</option>
+      </select>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" onclick="clearPad()">Leeren</button>
+      <button class="tb-btn" onclick="downloadPad()">↓ .txt</button>
     </div>
-    <div class="status-bar">
-      <div class="status-dot">
-        <div class="dot" id="conn-dot"></div>
-        <span id="conn-label">Verbinde…</span>
-      </div>
-      <div class="users-count" id="users-count"></div>
+    <div class="editor-wrap">
+      <div id="editor-display" aria-hidden="true"></div>
+      <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+        placeholder="Hier tippen — alle sehen es sofort…"></textarea>
+      <div class="typing-pills" id="typing-pills"></div>
     </div>
-  </header>
-
-  <div class="toolbar">
-    <button onclick="fmt('bold')"><b>B</b></button>
-    <button onclick="fmt('italic')"><i>I</i></button>
-    <button onclick="fmt('underline')"><u>U</u></button>
-    <div class="toolbar-sep"></div>
-    <select id="font-size-sel" onchange="changeSize(this.value)">
-      <option value="12">12px</option>
-      <option value="14">14px</option>
-      <option value="15" selected>15px</option>
-      <option value="18">18px</option>
-      <option value="22">22px</option>
-    </select>
-    <div class="toolbar-sep"></div>
-    <button onclick="clearPad()">✕ Leeren</button>
-    <button onclick="downloadPad()">↓ Herunterladen</button>
+    <footer>
+      <div class="ft" id="char-count">0 Zeichen</div>
+      <div class="ft" id="last-saved">—</div>
+    </footer>
   </div>
-
-  <div class="editor-wrap">
-    <textarea id="editor" placeholder="Hier tippen… Änderungen werden sofort mit allen geteilt, die diesen Link haben."></textarea>
-    <div class="remote-typing" id="remote-typing">✦ Jemand tippt…</div>
-  </div>
-
-  <footer>
-    <div class="footer-left" id="char-count">0 Zeichen</div>
-    <div class="footer-right" id="last-saved">Noch nicht gespeichert</div>
-  </footer>
+</div>
 </div>
 
-<!-- Start Modal -->
-<div class="modal-overlay" id="modal">
+<!-- HISTORY PANEL -->
+<div id="hist-panel">
+  <div class="hp-hdr">
+    <span class="hp-title">Bearbeitungsverlauf</span>
+    <button class="icon-btn" onclick="toggleHistory()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="hp-list" id="history-list"></div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="overlay" id="modal-onboard">
   <div class="modal">
-    <h2>LivePad</h2>
-    <p>Erstelle ein neues Pad oder öffne ein bestehendes über dessen ID — beide Geräte sehen Änderungen live.</p>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="createNewPad()">✦ Neues Pad erstellen</button>
-      <div class="or-divider">oder</div>
+    <h2>LivePad ✦</h2>
+    <p>Gemeinsam in Echtzeit schreiben. Erstelle ein Pad oder öffne ein bestehendes.</p>
+    <div class="mrow">
+      <div class="field"><label>Dein Name</label><input type="text" id="ob-name" placeholder="z.B. Max" maxlength="20"></div>
+      <div class="field"><label>Deine Farbe</label><div class="colors" id="ob-colors"></div></div>
+      <button class="btn-p" onclick="obCreate()">✦ Neues Pad erstellen</button>
+      <div class="or-row">oder</div>
       <div class="join-row">
-        <input type="text" id="join-input" placeholder="Pad-ID eingeben…" onkeydown="if(event.key==='Enter')joinPad()">
-        <button onclick="joinPad()">Öffnen</button>
+        <input type="text" id="ob-join" placeholder="Pad-ID eingeben…" onkeydown="if(event.key==='Enter')obJoin()">
+        <button onclick="obJoin()">Öffnen</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="overlay" id="modal-profile" style="display:none;">
+  <div class="modal">
+    <h2>Mein Profil</h2>
+    <p>Name und Farbe anpassen.</p>
+    <div class="mrow">
+      <div class="field"><label>Name</label><input type="text" id="prof-name" maxlength="20"></div>
+      <div class="field"><label>Farbe</label><div class="colors" id="prof-colors"></div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-p" onclick="saveProfile()">Speichern</button>
+        <button class="btn-s" onclick="closeModal('modal-profile')">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY DETAIL -->
+<div class="overlay" id="modal-hist" style="display:none;">
+  <div class="modal">
+    <h2 style="font-size:1.05rem;" id="hist-m-title">Verlaufseintrag</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+      <span style="font-size:0.72rem;color:var(--text2)" id="hist-m-meta"></span>
+      <button class="restore-btn" onclick="restoreHistory()">↺ Wiederherstellen</button>
+    </div>
+    <div class="hist-prev-box" id="hist-m-content"></div>
+    <button class="btn-s" style="margin-top:10px;width:100%;" onclick="closeModal('modal-hist')">Schließen</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, onDisconnect, push, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove, onDisconnect }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBy1AVs5BSwMtZtqo380vCUvy33Rq-XeeE",
-    authDomain: "livepad-1e874.firebaseapp.com",
-    databaseURL: "https://livepad-1e874-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "livepad-1e874",
-    storageBucket: "livepad-1e874.firebasestorage.app",
-    messagingSenderId: "915098579977",
-    appId: "1:915098579977:web:999328cc753610cd36b4d8",
-    measurementId: "G-J0PXWV9ZZJ"
-  };
+const FB = {
+  apiKey:"AIzaSyBy1AVs5BSwMtZtqo380vCUvy33Rq-XeeE",
+  authDomain:"livepad-1e874.firebaseapp.com",
+  databaseURL:"https://livepad-1e874-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"livepad-1e874",
+  storageBucket:"livepad-1e874.firebasestorage.app",
+  messagingSenderId:"915098579977",
+  appId:"1:915098579977:web:999328cc753610cd36b4d8"
+};
 
-  const editor   = document.getElementById('editor');
-  const connDot  = document.getElementById('conn-dot');
-  const connLabel= document.getElementById('conn-label');
-  const charCount= document.getElementById('char-count');
-  const lastSaved= document.getElementById('last-saved');
-  const remoteTyping = document.getElementById('remote-typing');
-  const usersCount = document.getElementById('users-count');
-  const padIdDisplay = document.getElementById('pad-id-display');
+const COLORS=['#6366f1','#ec4899','#f97316','#22c55e','#06b6d4','#eab308','#ef4444','#8b5cf6','#14b8a6','#f43f5e'];
 
-  let currentPadId = null;
-  let db = null;
-  let padRef = null;
-  let presenceRef = null;
-  let myUserId = Math.random().toString(36).slice(2, 8);
-  let isRemoteUpdate = false;
-  let saveTimeout = null;
-  let typingTimeout = null;
-  let remoteTypingTimeout = null;
-  let channel = null;
-  let useFirebase = true;
+const app=initializeApp(FB);
+const db=getDatabase(app);
 
-  const app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
+let padId=null,myId=ls('lp_uid')||rnd(),myName=ls('lp_name')||'',myColor=ls('lp_color')||COLORS[0];
+let presRef=null,isRemote=false,saveTimer=null,typTimer=null;
+let segments=[],users={},histData=[],histSel=null,sidebarOpen=true;
+let lastHistSave=0;
 
-  // ── Expose globals ──
-  window.createNewPad = createNewPad;
-  window.joinPad = joinPad;
-  window.copyLink = copyLink;
-  window.fmt = fmt;
-  window.changeSize = changeSize;
-  window.clearPad = clearPad;
-  window.downloadPad = downloadPad;
+ls('lp_uid',myId);
 
-  // ── Check URL for pad id ──
-  window.addEventListener('load', () => {
-    const hash = location.hash.slice(1);
-    if (hash) {
-      document.getElementById('join-input').value = hash;
-    }
+const editor=ge('editor'),display=ge('editor-display'),connDot=ge('conn-dot'),
+  connLbl=ge('conn-label'),charCnt=ge('char-count'),lastSav=ge('last-saved'),
+  typPills=ge('typing-pills'),userList=ge('user-list'),sbHist=ge('sidebar-history'),
+  histList=ge('history-list'),padDisp=ge('pad-id-display'),meAv=ge('me-av'),meName=ge('me-name');
+
+function ge(id){return document.getElementById(id);}
+function ls(k,v){if(v!==undefined)localStorage.setItem(k,v);return localStorage.getItem(k);}
+function rnd(){return Math.random().toString(36).slice(2,10);}
+
+// Color pickers
+let obColor=myColor,profColor=myColor;
+
+function buildColors(cid,cur,onChange){
+  const c=ge(cid);c.innerHTML='';
+  COLORS.forEach(col=>{
+    const s=document.createElement('div');
+    s.className='cswatch'+(col===cur?' active':'');
+    s.style.background=col;
+    s.onclick=()=>{c.querySelectorAll('.cswatch').forEach(x=>x.classList.remove('active'));s.classList.add('active');onChange(col);};
+    c.appendChild(s);
+  });
+}
+buildColors('ob-colors',myColor,c=>obColor=c);
+if(myName) ge('ob-name').value=myName;
+
+// Init me display
+function refreshMe(){
+  ls('lp_name',myName);ls('lp_color',myColor);
+  meAv.textContent=myName.charAt(0).toUpperCase()||'?';
+  meAv.style.background=myColor;
+  meName.textContent=myName;
+}
+refreshMe();
+
+// Expose globals
+Object.assign(window,{obCreate,obJoin,showProfileModal,saveProfile,closeModal,
+  toggleSidebar,toggleHistory,fmt,changeSize,clearPad,downloadPad,copyLink,restoreHistory});
+
+window.addEventListener('load',()=>{
+  const h=location.hash.slice(1);
+  if(h){ge('ob-join').value=h;}
+  if(myName) ge('ob-name').value=myName;
+});
+
+function obCreate(){
+  const n=ge('ob-name').value.trim();
+  if(!n){toast('Bitte einen Namen eingeben');return;}
+  myName=n;myColor=obColor;refreshMe();
+  startPad(genId());
+}
+function obJoin(){
+  const n=ge('ob-name').value.trim(),id=ge('ob-join').value.trim();
+  if(!n){toast('Bitte einen Namen eingeben');return;}
+  if(!id){toast('Bitte eine Pad-ID eingeben');return;}
+  myName=n;myColor=obColor;refreshMe();
+  startPad(id);
+}
+function showProfileModal(){
+  ge('prof-name').value=myName;profColor=myColor;
+  buildColors('prof-colors',myColor,c=>profColor=c);
+  ge('modal-profile').style.display='flex';
+}
+function saveProfile(){
+  const n=ge('prof-name').value.trim();
+  if(!n){toast('Name darf nicht leer sein');return;}
+  myName=n;myColor=profColor;refreshMe();
+  closeModal('modal-profile');
+  if(padId&&presRef) updatePresence();
+  toast('Profil gespeichert ✓');
+}
+function closeModal(id){ge(id).style.display='none';}
+
+function startPad(id){
+  padId=id;location.hash=id;padDisp.textContent=id;
+  closeModal('modal-onboard');
+  setupFB(id);
+}
+
+function setupFB(id){
+  // Presence
+  presRef=push(ref(db,`pads/${id}/presence`));
+  updatePresence();
+  onDisconnect(presRef).remove();
+
+  onValue(ref(db,`pads/${id}/presence`),snap=>{
+    users={};
+    if(snap.exists()) snap.forEach(c=>{const d=c.val();if(d&&d.uid)users[d.uid]=d;});
+    renderUsers();
   });
 
-  function generateId() {
-    const words = ['alpha','beta','nova','echo','delta','sigma','omega','zenith','pulse','core','flux','arc'];
-    const a = words[Math.floor(Math.random()*words.length)];
-    const b = words[Math.floor(Math.random()*words.length)];
-    const n = Math.floor(1000 + Math.random()*9000);
-    return `${a}-${b}-${n}`;
-  }
-
-  function createNewPad() {
-    const id = generateId();
-    openPad(id);
-  }
-
-  function joinPad() {
-    const val = document.getElementById('join-input').value.trim();
-    if (!val) { showToast('Bitte eine Pad-ID eingeben'); return; }
-    openPad(val);
-  }
-
-  function openPad(id) {
-    currentPadId = id;
-    location.hash = id;
-    padIdDisplay.textContent = id;
-    document.getElementById('modal').style.display = 'none';
-
-    if (useFirebase) {
-      setupFirebase(id);
+  // Segments (colored text)
+  onValue(ref(db,`pads/${id}/segments`),snap=>{
+    const data=snap.val();
+    if(data===null){segments=[];renderDisplay();return;}
+    if(typeof data==='string'){
+      segments=[{text:data,uid:null,color:null,name:null}];
+    } else if(Array.isArray(data)){
+      segments=data.filter(Boolean);
     } else {
-      setupBroadcastChannel(id);
+      segments=Object.values(data).filter(Boolean);
+    }
+    const full=segments.map(s=>s.text||'').join('');
+    if(full!==editor.value){
+      isRemote=true;
+      const ss=editor.selectionStart,se=editor.selectionEnd;
+      editor.value=full;
+      try{editor.setSelectionRange(ss,se);}catch(e){}
+      isRemote=false;
+      updateMeta();
+    }
+    renderDisplay();
+  });
+
+  // Typing
+  onValue(ref(db,`pads/${id}/typing`),snap=>{
+    renderTyping(snap.exists()?snap.val():{});
+  });
+
+  // History
+  onValue(ref(db,`pads/${id}/history`),snap=>{
+    histData=[];
+    if(snap.exists()) snap.forEach(c=>histData.push({key:c.key,...c.val()}));
+    histData.sort((a,b)=>b.ts-a.ts);
+    renderHistory();
+  });
+
+  setConn(true);
+  editor.addEventListener('scroll',()=>display.scrollTop=editor.scrollTop);
+}
+
+function updatePresence(){
+  if(!presRef)return;
+  set(presRef,{uid:myId,name:myName,color:myColor,ts:Date.now()});
+}
+
+// INPUT
+editor.addEventListener('input',()=>{
+  if(isRemote)return;
+  updateMeta();
+  scheduleSave();
+  sendTyping();
+});
+editor.addEventListener('input',updateMeta);
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  connDot.className='dot sync';
+  saveTimer=setTimeout(doSave,120);
+}
+
+function doSave(){
+  if(!padId)return;
+  const text=editor.value;
+  const segs=attributeEdit(text);
+  set(ref(db,`pads/${padId}/segments`),segs)
+    .then(()=>{
+      connDot.className='dot on';
+      lastSav.textContent='Gespeichert '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      maybeHistory(text);
+    })
+    .catch(()=>setConn(false));
+}
+
+// Diff-attribution: find prefix/suffix, attribute middle to me
+function attributeEdit(newText){
+  const old=segments.map(s=>s.text||'').join('');
+  if(newText===old)return segments;
+  let p=0;
+  while(p<old.length&&p<newText.length&&old[p]===newText[p])p++;
+  let s=0;
+  while(s<(old.length-p)&&s<(newText.length-p)&&old[old.length-1-s]===newText[newText.length-1-s])s++;
+  const changed=newText.slice(p,newText.length-s);
+  const prefix=newText.slice(0,p);
+  const suffix=newText.slice(newText.length-s);
+  const result=[];
+  // prefix: reuse old segments
+  if(prefix){
+    let rem=prefix;
+    for(const seg of segments){
+      if(!rem)break;
+      const t=Math.min((seg.text||'').length,rem.length);
+      if(t>0)result.push({text:seg.text.slice(0,t),uid:seg.uid,color:seg.color,name:seg.name});
+      rem=rem.slice(t);
     }
   }
-
-  // ── FIREBASE MODE ──
-  function setupFirebase(id) {
-    padRef = ref(db, `pads/${id}`);
-    presenceRef = push(ref(db, `pads/${id}/presence`));
-
-    // Mark presence
-    set(presenceRef, { user: myUserId, joined: serverTimestamp() });
-    onDisconnect(presenceRef).remove();
-
-    // Listen to presence count
-    onValue(ref(db, `pads/${id}/presence`), snap => {
-      const count = snap.exists() ? Object.keys(snap.val()).length : 0;
-      usersCount.textContent = count === 1 ? '1 Nutzer online' : `${count} Nutzer online`;
-    });
-
-    // Listen to content
-    onValue(ref(db, `pads/${id}/content`), snap => {
-      const val = snap.val() || '';
-      if (val !== editor.value) {
-        isRemoteUpdate = true;
-        const selStart = editor.selectionStart;
-        const selEnd   = editor.selectionEnd;
-        editor.value = val;
-        try { editor.setSelectionRange(selStart, selEnd); } catch(e){}
-        isRemoteUpdate = false;
-        updateMeta();
-        showRemoteTyping();
+  // changed: attribute to me
+  if(changed){
+    if(result.length&&result[result.length-1].uid===myId){
+      result[result.length-1].text+=changed;
+    } else {
+      result.push({text:changed,uid:myId,color:myColor,name:myName});
+    }
+  }
+  // suffix: reuse old segments from end
+  if(suffix){
+    let rem=suffix;
+    const rev=[...segments].reverse();
+    const ssegs=[];
+    for(const seg of rev){
+      if(!rem)break;
+      const t=Math.min((seg.text||'').length,rem.length);
+      if(t>0)ssegs.unshift({text:seg.text.slice(seg.text.length-t),uid:seg.uid,color:seg.color,name:seg.name});
+      rem=rem.slice(t);
+    }
+    for(const ss of ssegs){
+      if(result.length&&result[result.length-1].uid===ss.uid){
+        result[result.length-1].text+=ss.text;
+      } else {
+        result.push(ss);
       }
-    });
-
-    // Listen to typing indicator
-    onValue(ref(db, `pads/${id}/typing`), snap => {
-      const data = snap.val();
-      if (data && data.user && data.user !== myUserId) {
-        showRemoteTyping();
-      }
-    });
-
-    setConnected(true);
-
-    editor.addEventListener('input', () => {
-      if (isRemoteUpdate) return;
-      updateMeta();
-      scheduleSave();
-      // Send typing indicator
-      set(ref(db, `pads/${id}/typing`), { user: myUserId, ts: Date.now() });
-    });
+    }
   }
+  return result.filter(s=>s&&s.text&&s.text.length>0);
+}
 
-  function scheduleSave() {
-    clearTimeout(saveTimeout);
-    connDot.classList.remove('online');
-    connDot.classList.add('syncing');
-    saveTimeout = setTimeout(() => {
-      if (useFirebase && padRef) {
-        set(ref(db, `pads/${currentPadId}/content`), editor.value)
-          .then(() => {
-            lastSaved.textContent = 'Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-            setConnected(true);
-          })
-          .catch(() => setConnected(false));
-      } else if (channel) {
-        const data = { type: 'content', pad: currentPadId, value: editor.value, from: myUserId };
-        channel.postMessage(data);
-        localStorage.setItem('livepad_' + currentPadId, editor.value);
-        lastSaved.textContent = 'Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        setConnected(true);
-      }
-    }, 300);
+// DISPLAY
+function renderDisplay(){
+  if(!segments||!segments.length){display.innerHTML='';return;}
+  let html='';
+  for(const seg of segments){
+    if(!seg||!seg.text)continue;
+    const txt=esc(seg.text);
+    if(seg.uid&&seg.color){
+      const bg=rgba(seg.color,.16),bd=rgba(seg.color,.45);
+      html+=`<span class="seg" style="background:${bg};border-bottom:1.5px solid ${bd}" title="${esc(seg.name||'')}">${txt}</span>`;
+    } else {
+      html+=`<span>${txt}</span>`;
+    }
   }
+  display.innerHTML=html;
+  display.scrollTop=editor.scrollTop;
+}
 
-  // ── BROADCASTCHANNEL FALLBACK (same browser, multi-tab) ──
-  function setupBroadcastChannel(id) {
-    channel = new BroadcastChannel('livepad_' + id);
-    setConnected(true);
-    usersCount.textContent = 'Multi-Tab Modus';
+function esc(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/ /g,'&nbsp;');
+}
+function rgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
-    // Load existing content
-    const saved = localStorage.getItem('livepad_' + id);
-    if (saved) { editor.value = saved; updateMeta(); }
+// TYPING
+function sendTyping(){
+  if(!padId)return;
+  set(ref(db,`pads/${padId}/typing/${myId}`),{name:myName,color:myColor,ts:Date.now()});
+  clearTimeout(typTimer);
+  typTimer=setTimeout(()=>remove(ref(db,`pads/${padId}/typing/${myId}`)),2000);
+}
+function renderTyping(data){
+  typPills.innerHTML='';
+  Object.entries(data).forEach(([uid,d])=>{
+    if(uid===myId)return;
+    if(Date.now()-d.ts>4000)return;
+    const p=document.createElement('div');
+    p.className='t-pill';
+    p.style.color=d.color||'#fff';
+    p.style.borderColor=rgba(d.color||'#fff',.3);
+    p.innerHTML=`<b>${esc(d.name||'?')}</b> tippt<span class="tdots"><span></span><span></span><span></span></span>`;
+    typPills.appendChild(p);
+  });
+}
 
-    // Announce join
-    channel.postMessage({ type: 'join', from: myUserId });
+// USERS
+function renderUsers(){
+  userList.innerHTML='';
+  Object.values(users).forEach(u=>{
+    const li=document.createElement('div');
+    li.className='user-item';
+    li.innerHTML=`<div class="u-av" style="background:${u.color||'#6366f1'}">${(u.name||'?').charAt(0).toUpperCase()}</div><span class="u-name">${esc(u.name||'?')}</span>${u.uid===myId?'<span class="u-you">Du</span>':''}`;
+    userList.appendChild(li);
+  });
+}
 
-    channel.addEventListener('message', e => {
-      const msg = e.data;
-      if (!msg || msg.from === myUserId) return;
-      if (msg.type === 'content' && msg.pad === id) {
-        if (msg.value !== editor.value) {
-          isRemoteUpdate = true;
-          const s = editor.selectionStart, e2 = editor.selectionEnd;
-          editor.value = msg.value;
-          try { editor.setSelectionRange(s, e2); } catch(ex){}
-          isRemoteUpdate = false;
-          updateMeta();
-          showRemoteTyping();
-        }
-      }
-      if (msg.type === 'typing') { showRemoteTyping(); }
-    });
+// HISTORY
+function maybeHistory(text){
+  const now=Date.now();
+  if(now-lastHistSave<5000)return;
+  lastHistSave=now;
+  push(ref(db,`pads/${padId}/history`),{text:text.slice(0,8000),uid:myId,name:myName,color:myColor,ts:now});
+}
+function renderHistory(){
+  const items=histData.slice(0,40);
+  // Sidebar
+  sbHist.innerHTML='';
+  items.slice(0,8).forEach(h=>{
+    const d=document.createElement('div');
+    d.className='hm-item';d.style.borderLeftColor=h.color||'#6366f1';
+    d.innerHTML=`<div class="hm-dot" style="background:${h.color||'#6366f1'}"></div><div class="hm-info"><div class="hm-name">${esc(h.name||'?')}</div><div class="hm-time">${fmtT(h.ts)}</div><div class="hm-prev">${esc((h.text||'').slice(0,40))}</div></div>`;
+    d.onclick=()=>openHist(h);
+    sbHist.appendChild(d);
+  });
+  // Full panel
+  histList.innerHTML='';
+  items.forEach(h=>{
+    const d=document.createElement('div');
+    d.className='hp-item';d.style.borderLeftColor=h.color||'#6366f1';
+    d.innerHTML=`<div class="hp-item-hdr"><div style="width:9px;height:9px;border-radius:50%;background:${h.color||'#6366f1'};flex-shrink:0"></div><span class="hp-item-name">${esc(h.name||'?')}</span><span class="hp-item-time">${fmtT(h.ts)}</span></div><div class="hp-item-prev">${esc((h.text||'').slice(0,60))}</div>`;
+    d.onclick=()=>openHist(h);
+    histList.appendChild(d);
+  });
+}
+function openHist(h){
+  histSel=h;
+  ge('hist-m-title').textContent=`Von ${h.name||'?'}`;
+  ge('hist-m-meta').textContent=fmtT(h.ts)+' — '+(h.text||'').length+' Zeichen';
+  ge('hist-m-content').textContent=h.text||'';
+  ge('modal-hist').style.display='flex';
+}
+function restoreHistory(){
+  if(!histSel)return;
+  editor.value=histSel.text||'';
+  editor.dispatchEvent(new Event('input'));
+  closeModal('modal-hist');
+  toast('Version wiederhergestellt ↺');
+}
+function fmtT(ts){
+  const d=new Date(ts),n=new Date();
+  if(d.toDateString()===n.toDateString()) return d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
 
-    editor.addEventListener('input', () => {
-      if (isRemoteUpdate) return;
-      updateMeta();
-      scheduleSave();
-      channel.postMessage({ type: 'typing', from: myUserId });
-    });
-  }
+function setConn(ok){connDot.className='dot '+(ok?'on':'');connLbl.textContent=ok?'Verbunden':'Getrennt';}
+function updateMeta(){charCnt.textContent=editor.value.length.toLocaleString('de-DE')+' Zeichen';}
 
-  function setConnected(ok) {
-    connDot.className = 'dot ' + (ok ? 'online' : '');
-    connLabel.textContent = ok ? 'Verbunden' : 'Getrennt';
-  }
+// TOOLBAR
+function fmt(cmd){
+  const s=editor.selectionStart,e=editor.selectionEnd,sel=editor.value.substring(s,e);
+  if(!sel)return;
+  const tags={bold:['**','**'],italic:['_','_'],underline:['<u>','</u>']};
+  const [o,c]=tags[cmd];
+  editor.value=editor.value.substring(0,s)+o+sel+c+editor.value.substring(e);
+  editor.setSelectionRange(s+o.length,e+o.length);
+  editor.dispatchEvent(new Event('input'));
+}
+function changeSize(v){editor.style.fontSize=v+'px';display.style.fontSize=v+'px';}
+function clearPad(){if(!confirm('Pad wirklich leeren?'))return;editor.value='';segments=[];editor.dispatchEvent(new Event('input'));}
+function downloadPad(){const b=new Blob([editor.value],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(padId||'pad')+'.txt';a.click();}
+function copyLink(){const u=location.origin+location.pathname+'#'+padId;navigator.clipboard.writeText(u).then(()=>toast('Link kopiert ✓'));}
+function toggleSidebar(){sidebarOpen=!sidebarOpen;ge('sidebar').classList.toggle('hidden',!sidebarOpen);}
+function toggleHistory(){ge('hist-panel').classList.toggle('open');}
+function toast(msg){const t=ge('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function genId(){const w=['alpha','beta','nova','echo','delta','sigma','omega','core','flux','arc','mint','sky'];return w[Math.random()*w.length|0]+'-'+w[Math.random()*w.length|0]+'-'+(1000+Math.random()*9000|0);}
 
-  function showRemoteTyping() {
-    remoteTyping.classList.add('visible');
-    clearTimeout(remoteTypingTimeout);
-    remoteTypingTimeout = setTimeout(() => remoteTyping.classList.remove('visible'), 2500);
-  }
-
-  function updateMeta() {
-    charCount.textContent = editor.value.length.toLocaleString('de-DE') + ' Zeichen';
-  }
-
-  // ── Toolbar ──
-  function fmt(cmd) {
-    // For textarea, just wrap selected text
-    const s = editor.selectionStart, e2 = editor.selectionEnd;
-    const sel = editor.value.substring(s, e2);
-    if (!sel) return;
-    const tags = { bold: ['**','**'], italic: ['_','_'], underline: ['<u>','</u>'] };
-    const [open, close] = tags[cmd];
-    editor.value = editor.value.substring(0, s) + open + sel + close + editor.value.substring(e2);
-    editor.setSelectionRange(s + open.length, e2 + open.length);
-    editor.dispatchEvent(new Event('input'));
-  }
-
-  function changeSize(v) {
-    editor.style.fontSize = v + 'px';
-  }
-
-  function clearPad() {
-    if (!confirm('Pad wirklich leeren?')) return;
-    editor.value = '';
-    editor.dispatchEvent(new Event('input'));
-    updateMeta();
-    scheduleSave();
-  }
-
-  function downloadPad() {
-    const blob = new Blob([editor.value], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = (currentPadId || 'pad') + '.txt';
-    a.click();
-  }
-
-  function copyLink() {
-    const url = location.origin + location.pathname + '#' + currentPadId;
-    navigator.clipboard.writeText(url).then(() => showToast('Link kopiert!'));
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
-  }
-
-  editor.addEventListener('input', updateMeta);
+document.addEventListener('click',e=>{
+  const p=ge('hist-panel');
+  if(p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('[onclick="toggleHistory()"]'))p.classList.remove('open');
+});
 </script>
 </body>
 </html>
