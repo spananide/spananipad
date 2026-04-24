@@ -487,35 +487,20 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, onDisconnect, push, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyBy1AVs5BSwMtZtqo380vCUvy33Rq-XeeE",
     authDomain: "livepad-1e874.firebaseapp.com",
+    databaseURL: "https://livepad-1e874-default-rtdb.firebaseio.com",
     projectId: "livepad-1e874",
     storageBucket: "livepad-1e874.firebasestorage.app",
     messagingSenderId: "915098579977",
     appId: "1:915098579977:web:999328cc753610cd36b4d8",
     measurementId: "G-J0PXWV9ZZJ"
   };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-
-  // ═══════════════════════════════════════════════════════
-  // HINWEIS: Da dies eine Demo ohne echte Firebase-Config ist,
-  // wird ein localStorage-basierter BroadcastChannel-Fallback
-  // verwendet, der im selben Browser zwischen Tabs funktioniert.
-  // Für echte Geräte: Füge deine Firebase-Konfiguration ein!
-  // ═══════════════════════════════════════════════════════
 
   const editor   = document.getElementById('editor');
   const connDot  = document.getElementById('conn-dot');
@@ -535,18 +520,11 @@
   let saveTimeout = null;
   let typingTimeout = null;
   let remoteTypingTimeout = null;
-  let channel = null; // BroadcastChannel fallback
-  let useFirebase = false;
+  let channel = null;
+  let useFirebase = true;
 
-  // Try to init Firebase
-  try {
-    const app = initializeApp(firebaseConfig);
-    db = getDatabase(app);
-    useFirebase = true;
-  } catch(e) {
-    console.log('Firebase nicht konfiguriert, nutze BroadcastChannel-Fallback');
-    useFirebase = false;
-  }
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
 
   // ── Expose globals ──
   window.createNewPad = createNewPad;
